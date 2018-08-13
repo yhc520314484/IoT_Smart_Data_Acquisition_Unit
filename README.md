@@ -20,7 +20,7 @@
   - AT Command Control
 - RoLa: SX1278 (Semtech)
   - Use SPI to connected with MCU
-- WiFi: ESP8266 (Espressif)
+- WIFI: ESP8266 (Espressif)
   - Use USART to connected with MCU
   - AT Command Control
 - Ethernet: W5500 (WIZnet)
@@ -42,7 +42,7 @@
   - S132 nRF52 SoftDevice 6.0.0 (Protocol Stacks on nRF52832)
   - nRF5_SDK_15.0.0_a53641a (SDK on nRF52832)
 
-## 3.System Structure Overview (Beside Bluetooth)
+## 3. System Structure Overview (Beside Bluetooth)
 
 - Implement Finite state machine by *Timer2* and *NVIC* *(Under Construction)*
 - Implement Private Protocol (version 1.0) to communicate with Smart Router (https://github.com/kyhao/Router)
@@ -54,7 +54,7 @@
   - Step4*(Under Construction)*: Processed with the finite state machine to get sensor's data from Usart2. When those data has been collected completely, sending an channel request to ask Master whether it has resource for handle sensor data or not periodically. If Master has this ability, DAU will get an response of channel allowed and send sensor data packet back to Master. If DAU not get this response, it will wait for several seconds to send channel request again
   - Step5*(Under Construction)*: After the sending process of sensor data packet, DAU will wait the reply from Master for a short time. If DAU received data got response, it will reset its state and wait finite state machine enable some flags to guide system restart the process of sensor data collection and sending. If not, DAU will resend sensor data packet immediately
 
-## 4.Protocol and Packet Define
+## 4. Protocol and Packet Define
 
 ### Protocol Define
 
@@ -84,5 +84,25 @@
     - Success Demo: 0xFF 0x01 (12 Bytes Slave ID) (12 Bytes Master ID) 0x04 0x00
   - 0x05 Sensor Data Packet
     - Success Demo: 0xFF 0x01 (12 Bytes Slave ID) (12 Bytes Master ID) 0x06 (Datalen) (Data)
-- **Tips1: 0x0d 0x0a should attach to the end of each packet because of DAU Serial Limited(Plan to corrected in the further version)**
+- **Tips1: 0x0d 0x0a should be attached into the end of each packet because of DAU Serial Limited(Plan to corrected in the further version)**
 - **Tips2: Debug command will be add in the further version. Debug information will NOT send to Master** 
+
+## 5. Debug Command *(Under Construction)*
+
+## 6. Module Implement Detail *(Under Construction)*
+
+### 6.1 WIFI (ESP8266) *(Under Construction)*
+
+### 6.2 LoRa (SX1278) *(Under Construction)*
+
+### 6.3 NB-IoT (BC95-B5) *(Under Construction)*
+
+### 6.4 Ethernet(W5500) *(Under Construction)*
+
+### 6.5  Bluetooth(nRF52832) *(Under Construction)*
+
+### 6.6 Sensor Data Get *(Under Construction)*
+
+## 
+
+### 
