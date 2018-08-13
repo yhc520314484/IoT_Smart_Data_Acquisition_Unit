@@ -1,4 +1,6 @@
-# IoT Smart Data Acquisition Unit  v1.0  2018/8/13:
+# IoT Smart Data Acquisition Unit
+
+### Version: 1.0   Change Data: 2018/8/13
 
 ## 1. Hardware Platform
 
@@ -48,7 +50,7 @@
 - Main Program Flow 
   - Step1: Initialize communication peripherals and its channels to Master(Smart Router)(Beside LoRa)
   - Step2: Read Master's ID from MCU's flash. If it not existed, sending an registered request  without ID of Master to the channel. If the Master's ID has been stored in flash, sending an registered request instead
-  - Step3: Wait for several minutes(Using *Timer3* to achieve this*(Under Construction)*) to ensure Slave(this DAU) has got a response of success registered from master, if not get, back to Step2 send registered request again
+  - Step3: Wait for several minutes(Using *Timer3* to achieve this*(Under Construction)*) to ensure Slave(this DAU) has got a response of success registered from master and store the master id into MCU's flash. If not get, back to Step2 send registered request again
   - Step4*(Under Construction)*: Processed with the finite state machine to get sensor's data from Usart2. When those data has been collected completely, sending an channel request to ask Master whether it has resource for handle sensor data or not periodically. If Master has this ability, DAU will get an response of channel allowed and send sensor data packet back to Master. If DAU not get this response, it will wait for several seconds to send channel request again
   - Step5*(Under Construction)*: After the sending process of sensor data packet, DAU will wait the reply from Master for a short time. If DAU received data got response, it will reset its state and wait finite state machine enable some flags to guide system restart the process of sensor data collection and sending. If not, DAU will resend sensor data packet immediately
 
