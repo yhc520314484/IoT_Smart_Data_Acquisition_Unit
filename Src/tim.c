@@ -42,6 +42,11 @@
 
 /* USER CODE BEGIN 0 */
 #include "iwdg.h"
+
+tim_data_update_time_settings system_data_update_time_settings = {
+	.gap_time = 0,
+	.window_length = 0
+};
 /* USER CODE END 0 */
 
 TIM_HandleTypeDef htim2;

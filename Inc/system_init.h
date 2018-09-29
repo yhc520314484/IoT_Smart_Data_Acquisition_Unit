@@ -3,6 +3,7 @@
 
 #include "main.h"
 #include "stm32l4xx_hal.h"
+#include "linked_list.h"
 
 /******************************AP¶ËÓ²¼ş³õÊ¼»¯************************************/
 void AP_side_hardware_init(void);                          //AP¶ËÏà¹ØÓ²¼ş³õÊ¼»¯ °üÀ¨Æ¬ÉÏÍâÉè¡¢Í¨ĞÅÄ£¿é¼°´«¸ĞÆ÷Ä£¿é
@@ -20,6 +21,8 @@ uint8_t read_connection_history_byte_from_eeprom(void);      //¶ÁÈ¡AP¶ËÊÇ·ñÔø³É¹
 void AP_side_registration_recovry(void);                   //AP¶ËÉè±¸·ÇÊ×´Î×¢²á¹ı³Ì£¬¼´×¢²á»Ö¸´¹ı³Ì
 void AP_side_registration_for_first_time(void);            //AP¶ËÉè±¸Ê×´Î×¢²á¹ı³Ì 
 uint8_t EEPROM_24C256_registration_recovry_read_procedure(void); //·ÇÊ×´Î×¢²áÊ±´ÓEEPROM¶ÁÀúÊ·×¢²áĞÅÏ¢
+//uint8_t EEPROM_24C256_sensor_parameter_read(uint8_t sensor_count);   //EEPROM¶ÁÈ¡´«¸ĞÆ÷Ïà¹ØµÄ¼Ä´æÆ÷
+uint8_t EEPROM_24C256_sensor_parameter_read(uint8_t sensor_count, Linked_List *sensor_parameter_recovery_linked_list_header);   //EEPROM¶ÁÈ¡´«¸ĞÆ÷Ïà¹ØµÄ¼Ä´æÆ÷
 /******************************Â·ÓÉÆ÷Á¬½Ó³õÊ¼»¯************************************/
 
 #endif

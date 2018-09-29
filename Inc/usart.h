@@ -73,6 +73,9 @@ uint8_t WiFi_NB_BT_USART3_Init(void);
 uint8_t Electric_Meter_USART2_Init(void);
 
 
+#define electric_meter_rs485_TX_EN	 HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_SET)		//485模式控制.0,接收;1,发送.
+#define electric_meter_rs485_RX_EN	 HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_RESET)		//485模式控制.0,接收;1,发送.
+
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

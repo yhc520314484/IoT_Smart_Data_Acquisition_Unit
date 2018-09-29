@@ -3,11 +3,13 @@
 
 #include "main.h"
 #include "stm32l4xx_hal.h"
+#include "linked_list.h"
 
 extern com_mod_phy_connected communication_module_physical_connected;
 extern sen_mod_phy_connected sensor_module_physical_connected;
 extern sys_task_flag system_task_flag;
 extern uint8_t unique_ID_STM32L4[12]; 
+extern Linked_List *memory_data_sensor_point_start_address;
 /**
   * @brief  ERROR_CODE 错误代码表
   */
@@ -31,6 +33,7 @@ typedef enum {
 	ERROR_CODE_NB_IoT_BC26_Driver_Init_FAIL,               //NB-IoT BC26模块驱动初始化失败
 	
 	ERROR_CODE_GPIO_DIP_Switch_Sen_Mod_Read_FAIL,          //读取传感器模块选择相关的GPIO口失败
+	ERROR_CODE_GPIO_Electric_Meter_Extra_Init_FAIL,        //电表相关的GPIO口初始化失败
 	ERROR_CODE_Electric_Meter_USART2_Init_FAIL,            //SP3485模块所使用的USART2是初始化失败
 	ERROR_CODE_Electric_Meter_Baudrate_Auto_Get_FAIL,      //电表传感器自动波特率获取失败
 	ERROR_CODE_Other_System_Initialization_Process_FAIL,   //其他系统初始化过程失败
@@ -41,10 +44,39 @@ typedef enum {
 	
 	ERROR_CODE_EEPROM_24C256_REGISTRATION_RECOVRY_READ_PROCEDURE_FAIL,  //非首次注册时从EEPROM读历史注册信息失败
 	
+	ERROR_CODE_RTC_Init_Set_FAIL,                              //RTC时钟初始化失败
+	ERROR_CODE_Data_UpdateTime_Settings_Set_FAIL,              //间隔时间和窗口时间解析失败
+
+
+	
+	ERROR_CODE_Protocol_Main_Package_Decode_Header_Length_Check_FAIL,           //收到的数据包长度小于最小协议包长度
+	ERROR_CODE_Protocol_Main_Package_Decode_Header_Top_Check_FAIL,              //收到的数据包的帧头不正确
+	ERROR_CODE_Protocol_Main_Package_Decode_Header_Version_Check_FAIL,          //收到的数据包的版本号不正确
+	ERROR_CODE_Protocol_Main_Package_Decode_Header_Serial_ID_Check_FAIL,        //收到的数据包的序号不正确
+	ERROR_CODE_Protocol_Main_Package_Decode_Header_Master_ID_Check_FAIL,         //已注册状态下收到的数据包源地址错误
+	ERROR_CODE_Protocol_Main_Package_Decode_Header_Slave_ID_Check_FAIL,           //已注册状态下收到的数据包目的地址错误	
+	
+	ERROR_CODE_Protocol_Device_Registere_Responce_Part_Decode_FAIL,              //路由器注册响应解码失败
+	ERROR_CODE_Protocol_Sensor_Parameter_Responce_Part_Decode_FAIL,              //路由器传感器参数确认/返回失败
+	ERROR_CODE_Protocol_Time_Sync_Responce_Part_Decode_FAIL,                     //路由器时间同步确认失败
+	ERROR_CODE_Protocol_Data_Entity_Ack_Decode_FAIL,                             //路由器数据上传确认失败
+	ERROR_CODE_Protocol_System_Warning_Ack_Part_Decode_FAIL,                     //路由器告警信息确认失败
+	ERROR_CODE_Protocol_Period_Change_Request_Part_Decode_FAIL,                  //路由器周期更改请求失败
+	ERROR_CODE_Protocol_Sensor_Parameter_Change_Request_Part_Decode_FAIL,        //路由器传感器参数变更请求失败
+	ERROR_CODE_Protocol_Communication_Key_Update_Request_Part_Decode_FAIL,       //路由器更新通信密钥请求失败
+	ERROR_CODE_Protocol_Network_Switching_Request_Part_Decode_FAIL,              //路由器退网换区命令失败
+	ERROR_CODE_Protocol_Reboot_Request_Part_Decode_FAIL,                         //路由器重启命令失败
+	ERROR_CODE_Protocol_Device_State_Request_Part_Decode_FAIL,                   //路由器获取AP设备状态失败
+	ERROR_CODE_Protocol_Energy_Saving_Mode_Request_Part_Decode_FAIL,             //路由器节能模式更改命令失败
+	ERROR_CODE_Protocol_Factory_Setting_Reset_Request_Part_Decode_FAIL,          //路由器恢复出厂设置命令失败
+	
+	
+
 	ERROR_CODE_UART1_RX_BUFFER_OVERFLOW,                   //串口1接收缓存溢出
 	ERROR_CODE_UART2_RX_BUFFER_OVERFLOW,                   //串口2接收缓存溢出
 	ERROR_CODE_UART3_RX_BUFFER_OVERFLOW,                   //串口3接收缓存溢出
 	
+	ERROR_CODE_EEPROM_24C256_SENSOR_PARAMETER_READ_FAIL,    //EEPROM读取传感器相关的寄存器失败
 	ERROR_CODE_EEPROM_Read_Bytes_FAIL,                      //EEPROM读取字节数据失败
 	ERROR_CODE_EEPROM_Write_Bytes_FAIL,                     //EEPROM写入字节数据失败
 }ErrorCodeDefinition;

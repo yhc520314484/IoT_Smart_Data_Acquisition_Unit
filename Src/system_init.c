@@ -6,6 +6,8 @@
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
+#include "malloc.h"
+
 
 #include "EEPROM_24C256.h"
 #include "system_common.h"
@@ -17,6 +19,10 @@
 
 #include "sensor_electric_meter.h"
 
+extern reg_data_sensor_parm_and_ID register_data_sensor_parm_and_ID;
+extern Linked_List *memory_data_sensor_point_start_address;
+
+//reg_data_sensor_parm_and_ID *register_data_sensor_parm_and_ID_address;
 
 /********************************************************************************************************/
 /*                                                                                                      */
@@ -161,6 +167,9 @@ void sensor_module_init(void){
 	
 		/**************电表模块初始化       START   DLT-645-2007-多功能电能表通信协议2010*******************/
 	if(sensor_module_physical_connected.electric_meter_connected == 1){
+		if(GPIO_Electric_Meter_Extra_Init())  //WiFi ESP8266模块除USART3通信必要管脚外所需的其他GPIO管脚初始化
+			error_code_handle(ERROR_CODE_GPIO_Electric_Meter_Extra_Init_FAIL);
+		
 		if(Electric_Meter_USART2_Init())  //电表模块USART2初始化
 			error_code_handle(ERROR_CODE_Electric_Meter_USART2_Init_FAIL);
 		
@@ -182,8 +191,14 @@ void other_initialization_procedure(void){
 /**	
   * @brief  内存中预置的恢复出厂设置密钥
   */
-uint8_t init_wipe_key[16] = {0x52, 0XDE, 0x86, 0x6C, 0x7D, 0x15, 0xE8, 0x33,
+	uint8_t init_wipe_key[16] = {0x52, 0XDE, 0x86, 0x6C, 0x7D, 0x15, 0xE8, 0x33,
 														 0xF7, 0xF0, 0xA8, 0xA3, 0x19, 0xC5, 0xE1, 0x55};
+	uint8_t i;
+
+	for(i = 0; i < 16; i++) register_data_wipe_key.WipeKey[i] = init_wipe_key[i];
+														 
+
+														 
 	if(ee_WriteBytes(register_data_wipe_key.WipeKey, register_address_wipe_key.WipeKey, 16))
 		error_code_handle(ERROR_CODE_EEPROM_Write_Bytes_FAIL);
 	
@@ -205,6 +220,9 @@ uint8_t other_system_initialization_process(void){
 	  HAL_TIM_Base_Start_IT(&htim2);                                //初始化中断时基
 	__HAL_RCC_PWR_CLK_ENABLE();                                     //初始化功耗控制模块时钟
 	__HAL_RCC_WAKEUPSTOP_CLK_CONFIG(RCC_STOP_WAKEUPCLOCK_HSI);      //保证系统唤醒后使用HSI时钟
+	my_mem_init(SRAMIN);		                                        //初始化内部内存池  预先占用32K的内存空间用于动态内存分配
+		
+	memory_data_sensor_point_start_address = CreateNode();
 	
 	return 0;
 }
@@ -346,7 +364,145 @@ uint8_t EEPROM_24C256_registration_recovry_read_procedure(void){
 	
 	if(ee_ReadBytes(&register_data_basic_settings.SavePower, register_address_basic_settings.SavePower, 1))
 		error_code_handle(ERROR_CODE_EEPROM_Read_Bytes_FAIL);
+	/***********************AP_REG_BASIC_SETTINGS******************************/	
 	
+	
+	/***********************AP_REG_COMMUNICATION_KEY******************************/	
+	if(ee_ReadBytes(register_data_communication_key.CommunicationKey, register_address_communication_key.CommunicationKey, 16))
+		error_code_handle(ERROR_CODE_EEPROM_Read_Bytes_FAIL);
+	/***********************AP_REG_COMMUNICATION_KEY******************************/	
+	
+	/********************AP_REG_SENSOR_PARM  && AP_REG_SENSOR_ID****************************/	
+	if(EEPROM_24C256_sensor_parameter_read(register_address_basic_settings.SensorNum, memory_data_sensor_point_start_address))
+		error_code_handle(ERROR_CODE_EEPROM_24C256_SENSOR_PARAMETER_READ_FAIL);
+	/********************AP_REG_SENSOR_PARM  && AP_REG_SENSOR_ID****************************/			
+		
+		
+		
+		
 	return 0;
 	
+}
+
+///**
+//  * @name         EEPROM_24C256_sensor_parameter_read
+//  * @brief        EEPROM读取传感器相关的寄存器  需使用动态内存分配  因为传感器个数不确定
+//	* @param        void
+//  * @retval       传感器相关的寄存器读取是否成功  成功返回0  失败返回1
+//	* @lastModify   2018/9/26  14:24
+//	* @author       JackWilliam
+//  */
+//uint8_t EEPROM_24C256_sensor_parameter_read(uint8_t sensor_count){
+//	uint16_t EEPROM_base_address = AP_REG_SENSOR_PARM;
+//	uint16_t offset_address = 0;                                      //EEPROM偏移地址 
+//	uint32_t memory_sensor_data_size = (uint32_t)sensor_count * 32;   //每组传感器参数寄存器所占空间大小为32字节
+//	
+//	memory_data_sensor_point_start_address = mymalloc(0, memory_sensor_data_size);          //申请动态内存
+//	
+//	while(sensor_count--){
+//		if(ee_ReadBytes(&register_data_sensor_parm.SensorType, 
+//			   offset_address + register_address_sensor_parm.SensorType , 1))
+//			error_code_handle(ERROR_CODE_EEPROM_Read_Bytes_FAIL);
+//		sprintf((char*)(memory_data_sensor_point_start_address + offset_address), "%c", register_data_sensor_parm.SensorType);
+//		offset_address += AP_BYTE_OFFSET;
+//		
+//		if(ee_ReadBytes(&register_data_sensor_parm.SensorParaNum, 
+//			   offset_address + register_address_sensor_parm.SensorParaNum , 1))
+//			error_code_handle(ERROR_CODE_EEPROM_Read_Bytes_FAIL);
+//		sprintf((char*)(memory_data_sensor_point_start_address + offset_address), "%c", register_data_sensor_parm.SensorParaNum);
+//		offset_address += AP_BYTE_OFFSET;
+//		
+//		if(ee_ReadBytes(&register_data_sensor_parm.SensorIDLen, 
+//			   offset_address + register_address_sensor_parm.SensorIDLen , 1))
+//			error_code_handle(ERROR_CODE_EEPROM_Read_Bytes_FAIL);
+//		sprintf((char*)(memory_data_sensor_point_start_address + offset_address), "%c", register_data_sensor_parm.SensorIDLen);
+//		offset_address += AP_BYTE_OFFSET;
+//		
+//		if(ee_ReadBytes(register_data_sensor_parm.SensorComSpeed, 
+//			   offset_address + register_address_sensor_parm.SensorComSpeed , 5))
+//			error_code_handle(ERROR_CODE_EEPROM_Read_Bytes_FAIL);
+//		sprintf((char*)(memory_data_sensor_point_start_address + offset_address), "%s", register_data_sensor_parm.SensorComSpeed);
+//		offset_address += AP_BYTE_OFFSET * 5;
+//		
+//		if(ee_ReadBytes(register_data_sensor_parm.sensorParameter, 
+//			   offset_address + register_address_sensor_parm.sensorParameter , 8))
+//			error_code_handle(ERROR_CODE_EEPROM_Read_Bytes_FAIL);
+//		sprintf((char*)(memory_data_sensor_point_start_address + offset_address), "%s", register_data_sensor_parm.sensorParameter);
+//		offset_address += AP_BYTE_OFFSET * 8;
+//		
+//		if(ee_ReadBytes(register_data_sensor_ID.sensorID, 
+//			   offset_address + register_address_sensor_ID.sensorID , 16))
+//			error_code_handle(ERROR_CODE_EEPROM_Read_Bytes_FAIL);
+//		sprintf((char*)(memory_data_sensor_point_start_address + offset_address), "%s", register_data_sensor_parm.sensorParameter);
+//		offset_address += AP_BYTE_OFFSET * 16;
+//	}
+//	
+//	return 0;
+
+//}
+
+/**
+  * @name         EEPROM_24C256_sensor_parameter_read
+  * @brief        EEPROM读取传感器相关的寄存器  需使用动态内存分配  因为传感器个数不确定  使用了链表  可能会出现BUG！
+	* @param        void
+  * @retval       传感器相关的寄存器读取是否成功  成功返回0  失败返回1
+	* @lastModify   2018/9/26  14:24
+	* @author       JackWilliam
+  */
+uint8_t EEPROM_24C256_sensor_parameter_read(uint8_t sensor_count, Linked_List *sensor_parameter_recovery_linked_list_header){
+//	Linked_List *sensor_parameter_recovery_point;
+	uint16_t offset_address = 0;                                      //EEPROM偏移地址 
+	uint8_t i;
+	
+//	sensor_parameter_recovery_point = CreateNode();
+//	sensor_parameter_recovery_linked_list_header = CreateNode();
+	
+	while(sensor_count--){
+		sensor_parameter_recovery_linked_list_header->sensor_data_package_point = NULL;      //本程序段未用到的链表中数据段结构体指针清空
+		sensor_parameter_recovery_linked_list_header->sensor_parm_and_ID = mymalloc(sizeof(sensor_parameter_recovery_linked_list_header->sensor_parm_and_ID));  //为程序段用到的链表中数据段结构体指针申请动态内存
+		sensor_parameter_recovery_linked_list_header->sensor_parm_and_ID->sensor_parm = mymalloc(sizeof(sensor_parameter_recovery_linked_list_header->sensor_parm_and_ID->sensor_parm)); 
+		sensor_parameter_recovery_linked_list_header->sensor_parm_and_ID->sensor_ID = mymalloc(sizeof(sensor_parameter_recovery_linked_list_header->sensor_parm_and_ID->sensor_ID)); 
+		
+		if(ee_ReadBytes(&register_data_sensor_parm.SensorType, 
+			   offset_address + register_address_sensor_parm.SensorType , 1))
+			error_code_handle(ERROR_CODE_EEPROM_Read_Bytes_FAIL);
+		sensor_parameter_recovery_linked_list_header->sensor_parm_and_ID->sensor_parm->SensorType = register_data_sensor_parm.SensorType;
+		offset_address += AP_BYTE_OFFSET;
+		
+		if(ee_ReadBytes(&register_data_sensor_parm.SensorParaNum, 
+			   offset_address + register_address_sensor_parm.SensorParaNum , 1))
+			error_code_handle(ERROR_CODE_EEPROM_Read_Bytes_FAIL);
+		sensor_parameter_recovery_linked_list_header->sensor_parm_and_ID->sensor_parm->SensorParaNum = register_data_sensor_parm.SensorParaNum;
+		offset_address += AP_BYTE_OFFSET;
+		
+		if(ee_ReadBytes(&register_data_sensor_parm.SensorIDLen, 
+			   offset_address + register_address_sensor_parm.SensorIDLen , 1))
+			error_code_handle(ERROR_CODE_EEPROM_Read_Bytes_FAIL);
+		sensor_parameter_recovery_linked_list_header->sensor_parm_and_ID->sensor_parm->SensorIDLen = register_data_sensor_parm.SensorIDLen;
+		offset_address += AP_BYTE_OFFSET;
+		
+		if(ee_ReadBytes(register_data_sensor_parm.SensorComSpeed, 
+			   offset_address + register_address_sensor_parm.SensorComSpeed , 5))
+			error_code_handle(ERROR_CODE_EEPROM_Read_Bytes_FAIL);
+		for(i = 0; i < 5; i++)
+			sensor_parameter_recovery_linked_list_header->sensor_parm_and_ID->sensor_parm->SensorComSpeed[i] = register_data_sensor_parm.SensorComSpeed[i];
+		offset_address += AP_BYTE_OFFSET * 5;
+		
+		if(ee_ReadBytes(register_data_sensor_parm.sensorParameter, 
+			   offset_address + register_address_sensor_parm.sensorParameter , 8))
+			error_code_handle(ERROR_CODE_EEPROM_Read_Bytes_FAIL);
+		for(i = 0; i < 8; i++)
+			sensor_parameter_recovery_linked_list_header->sensor_parm_and_ID->sensor_parm->sensorParameter[i] = register_data_sensor_parm.sensorParameter[i];
+		offset_address += AP_BYTE_OFFSET * 8;
+		
+		if(ee_ReadBytes(register_data_sensor_ID.sensorID, 
+			   offset_address + register_address_sensor_ID.sensorID , 16))
+			error_code_handle(ERROR_CODE_EEPROM_Read_Bytes_FAIL);
+		for(i = 0; i < 16; i++)
+			sensor_parameter_recovery_linked_list_header->sensor_parm_and_ID->sensor_ID->sensorID[i] = register_data_sensor_ID.sensorID[i];
+		offset_address += AP_BYTE_OFFSET * 16;	
+		
+		if(sensor_count != 0) InsertNode(sensor_parameter_recovery_linked_list_header, TAIL);    //在尾部插入节点
+	}
+	return 0;
 }

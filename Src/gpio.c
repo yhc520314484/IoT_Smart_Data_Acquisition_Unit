@@ -40,7 +40,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "gpio.h"
 /* USER CODE BEGIN 0 */
-
+#include "usart.h"
 /* USER CODE END 0 */
 
 /*----------------------------------------------------------------------------*/
@@ -316,6 +316,34 @@ uint8_t GPIO_DIP_Switch_Sen_Mod_Read(sen_mod_phy_connected * physical_connected_
 	physical_connected_status->water_meter_connected = Key_Scan(module_select_button_SEN_WaterMeter_GPIO_Port, module_select_button_SEN_WaterMeter_Pin);
 	physical_connected_status->gas_meter_connected = Key_Scan(module_select_button_SEN_GasMeter_GPIO_Port, module_select_button_SEN_GasMeter_Pin);
 	
+	return 0;
+}
+
+
+/**
+  * @name         GPIO_Electric_Meter_Extra_Init
+  * @brief        电表模块除USART2通信必要管脚外所需的其他GPIO管脚初始化
+  * @param        void
+  * @retval       电表模块除USART2通信必要管脚外所需的其他GPIO管脚是否初始化成功  成功则返回0  失败则返回1
+	* @lastModify   2018/9/29  09:12
+	* @author       JackWilliam
+  */
+uint8_t GPIO_Electric_Meter_Extra_Init(void){
+	GPIO_InitTypeDef GPIO_InitStruct;
+	
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+	
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, sensor_electric_meter_rs485_EN_Pin, GPIO_PIN_RESET);
+	
+  /*Configure GPIO pins : PAPin PAPin PAPin */
+  GPIO_InitStruct.Pin = sensor_electric_meter_rs485_EN_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+	
+	electric_meter_rs485_RX_EN;
 	return 0;
 }
 

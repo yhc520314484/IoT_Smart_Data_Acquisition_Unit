@@ -336,7 +336,7 @@ uint8_t WiFi_NB_BT_USART3_Init(void){
 uint8_t Electric_Meter_USART2_Init(void){
 	MX_USART2_UART_Init();
 	HAL_UART_Receive_IT(&huart2, (uint8_t *)&uart2_one_byte_Rx_buffer, 1);
-	
+
 	return 0;
 }
 

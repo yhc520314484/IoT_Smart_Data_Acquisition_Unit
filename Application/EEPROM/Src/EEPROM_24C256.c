@@ -12,7 +12,8 @@ RegAddBasicSettings register_address_basic_settings = {
 	.SensorNum        =   AP_REG_BASIC_SETTINGS + ((uint16_t)0x0028),
 	.PowerSupply      =   AP_REG_BASIC_SETTINGS + ((uint16_t)0x0030),
 	.SavePower        =   AP_REG_BASIC_SETTINGS + ((uint16_t)0x0038),
-	.ComModuleType    =   AP_REG_BASIC_SETTINGS + ((uint16_t)0x0040)
+	.ComModuleType    =   AP_REG_BASIC_SETTINGS + ((uint16_t)0x0040),
+	.SenConAuto       =   AP_REG_BASIC_SETTINGS + ((uint16_t)0x0048)
 };
 
 /**
@@ -59,15 +60,15 @@ RegAddWipeKey register_address_wipe_key = {
 };
 
 /**
-  * @brief 传感器1参数存储寄存器单独字节地址定义
+  * @brief 传感器参数存储寄存器单独字节地址定义
   */
 
-RegAddSensor1Parm register_address_sensor1_parm = {
-	.SensorType        =   AP_REG_SENSOR1_PARM,
-	.SensorParaNum     =   AP_REG_SENSOR1_PARM + ((uint16_t)0x0008),
-	.SensorIDLen       =   AP_REG_SENSOR1_PARM + ((uint16_t)0x0010),
-	.SensorComSpeed    =   AP_REG_SENSOR1_PARM + ((uint16_t)0x0018),
-	.Sensor1Parameter  =   AP_REG_SENSOR1_PARM + ((uint16_t)0x0040),
+RegAddsensorParm register_address_sensor_parm = {
+	.SensorType        =   AP_REG_SENSOR_PARM,
+	.SensorParaNum     =   AP_REG_SENSOR_PARM + ((uint16_t)0x0008),
+	.SensorIDLen       =   AP_REG_SENSOR_PARM + ((uint16_t)0x0010),
+	.SensorComSpeed    =   AP_REG_SENSOR_PARM + ((uint16_t)0x0018),
+	.sensorParameter   =   AP_REG_SENSOR_PARM + ((uint16_t)0x0040),
 };
 
 reg_data_basic_settings        register_data_basic_settings;
@@ -75,14 +76,18 @@ reg_data_time_settings         register_data_time_settings;
 reg_data_warning_store         register_data_warning_store;
 reg_data_communication_key     register_data_communication_key;
 reg_data_wipe_key              register_data_wipe_key;
-reg_data_sensor1_parm          register_data_sensor1_parm;
-reg_data_sensor1_ID            register_data_sensor1_ID;
+reg_data_sensor_parm           register_data_sensor_parm;
+reg_data_sensor_ID             register_data_sensor_ID;
+reg_data_sensor_parm_and_ID    register_data_sensor_parm_and_ID = {
+	.sensor_parm = NULL,
+	.sensor_ID = NULL
+};
 
 /**
   * @brief 传感器1 ID存储寄存器单独字节地址定义
   */
-RegAddSensor1ID register_address_sensor1_ID = {
-	.Sensor1ID              = AP_REG_SENSOR1_ID
+RegAddsensorID register_address_sensor_ID = {
+	.sensorID              = AP_REG_SENSOR_ID
 };
 
 

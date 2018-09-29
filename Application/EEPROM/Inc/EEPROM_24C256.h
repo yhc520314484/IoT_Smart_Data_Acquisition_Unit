@@ -48,8 +48,8 @@ uint8_t ee_Test(void);
 #define AP_REG_COMMUNICATION_KEY                     ((uint16_t)0x0180)                   //通信密钥存储寄存器
 #define AP_REG_WIPE_KEY                              ((uint16_t)0x0200)                   //恢复出厂设置密钥存储寄存器
 
-#define AP_REG_SENSOR1_PARM                          ((uint16_t)0x2000)                   //传感器1参数存储寄存器
-#define AP_REG_SENSOR1_ID                            ((uint16_t)0x2080)                   //传感器1 ID存储寄存器
+#define AP_REG_SENSOR_PARM                          ((uint16_t)0x2000)                   //传感器参数存储寄存器
+#define AP_REG_SENSOR_ID                            ((uint16_t)0x2080)                   //传感器 ID存储寄存器
 
 #define AP_REG_OFFSET                                ((uint16_t)0x0080)                   //寄存器偏移地址
 #define AP_BYTE_OFFSET                               ((uint16_t)0x0008)                   //字节偏移地址
@@ -67,6 +67,7 @@ typedef struct
 	uint16_t PowerSupply;            /*!< AP端的电源供电方式，默认为市电供电,                       地址偏移: 0x30 */
 	uint16_t SavePower;              /*!< AP端是否设置为节能模式，默认为节能模式,                   地址偏移: 0x38 */
 	uint16_t ComModuleType;          /*!< AP端所连接的通信模块类型,                                 地址偏移: 0x40 */
+	uint16_t SenConAuto;            /*!< AP端所接收到的传感器参数配置模式是否为自动模式,            地址偏移: 0x48 */
 } RegAddBasicSettings;
 
 
@@ -86,6 +87,7 @@ typedef struct
 	uint8_t PowerSupply;            /*!< AP端的电源供电方式，默认为市电供电,                       地址偏移: 0x30 */
 	uint8_t SavePower;              /*!< AP端是否设置为节能模式，默认为节能模式,                   地址偏移: 0x38 */
 	uint8_t ComModuleType;          /*!< AP端所连接的通信模块类型,                                 地址偏移: 0x40 */
+	uint8_t SenConAuto;            /*!< AP端所接收到的传感器参数配置模式是否为自动模式,            地址偏移: 0x48 */
 } reg_data_basic_settings;
 
 /**
@@ -265,7 +267,7 @@ typedef struct
 
 
 /**
-  * @brief 传感器1参数存储寄存器单独字节地址定义
+  * @brief 传感器参数存储寄存器单独字节地址定义
   */
 
 typedef struct
@@ -282,12 +284,12 @@ typedef struct
 	/*!< 路由器所要求AP端连接的第一个传感器所需要上报的数据类型，每一位代表一种传感器参数，
 				1代表该参数需要采集上传，0代表该参数无需采集上传,     
 				地址偏移: 0x40 */	
-	uint16_t Sensor1Parameter;     
-} RegAddSensor1Parm;
+	uint16_t sensorParameter;     
+} RegAddsensorParm;
 
 
 /**
-  * @brief 传感器1参数存储寄存器变量定义
+  * @brief 传感器参数存储寄存器变量定义
   */
 
 typedef struct
@@ -299,41 +301,59 @@ typedef struct
 	/*!< AP端所连接的不同传感器正常通信所需要的通信速率，其中若传感器为电表，
 				则该项所代表的是电表对应的RS485串口波特率（十六进制数）,     
 				地址偏移: 0x18 */
-	uint8_t SensorComSpeed; 
+	uint8_t SensorComSpeed[5]; 
 
 	/*!< 路由器所要求AP端连接的第一个传感器所需要上报的数据类型，每一位代表一种传感器参数，
 				1代表该参数需要采集上传，0代表该参数无需采集上传,     
 				地址偏移: 0x40 */	
-	uint8_t Sensor1Parameter;     
-} reg_data_sensor1_parm;
+	uint8_t sensorParameter[8];     
+} reg_data_sensor_parm;
 
 
 /**
-  * @brief 传感器1 ID存储寄存器单独字节地址定义
+  * @brief 传感器 ID存储寄存器单独字节地址定义
   */
 typedef struct
 {
-	  uint16_t Sensor1ID;          /*!< 每个数据上报周期的长度，即数据上报的间隔时间，以秒为单位,            地址偏移: 0x00 */
-} RegAddSensor1ID;
-
-
+	  uint16_t sensorID;          /*!< 传感器ID地址定义,            地址偏移: 0x00 */
+} RegAddsensorID;
 
 
 /**
-  * @brief 传感器1 ID存储寄存器变量定义
+  * @brief SensorType相关的宏定义
+  */
+#define SensorType_Electric_Meter_Connected                 0x01
+#define SensorType_Water_Meter_Connected                    0x02
+#define SensorType_Gas_Meter_Connected                      0x03
+#define SensorType_Image_Source_Connected                   0x04
+#define SensorType_Other_Senser_Connected                   0x05
+
+/**
+  * @brief 传感器 ID存储寄存器变量定义
   */
 typedef struct
 {
-	  uint16_t Sensor1ID;          /*!< 每个数据上报周期的长度，即数据上报的间隔时间，以秒为单位,            地址偏移: 0x00 */
-} reg_data_sensor1_ID;
+	  uint8_t sensorID[16];          /*!< 传感器ID实体数据定义,            地址偏移: 0x00 */
+} reg_data_sensor_ID;
+
+
+/**
+  * @brief 传感器参数及ID共同定义存储寄存器变量定义
+  */
+
+typedef struct
+{ 
+	reg_data_sensor_parm   * sensor_parm;
+	reg_data_sensor_ID     * sensor_ID;
+} reg_data_sensor_parm_and_ID;
 
 extern reg_data_basic_settings        register_data_basic_settings;
 extern reg_data_time_settings         register_data_time_settings;
 extern reg_data_warning_store         register_data_warning_store;
 extern reg_data_communication_key     register_data_communication_key;
 extern reg_data_wipe_key              register_data_wipe_key;
-extern reg_data_sensor1_parm          register_data_sensor1_parm;
-extern reg_data_sensor1_ID            register_data_sensor1_ID;
+extern reg_data_sensor_parm          register_data_sensor_parm;
+extern reg_data_sensor_ID            register_data_sensor_ID;
 
 
 
@@ -342,9 +362,9 @@ extern RegAddTimeSettings register_address_time_settings;
 extern RegAddWarningStore register_address_warning_store;
 extern RegAddCommunicationKey register_address_communication_key;
 extern RegAddWipeKey register_address_wipe_key;
-extern RegAddSensor1Parm register_address_sensor1_parm;
-extern RegAddSensor1ID register_address_sensor1_ID;
-extern RegAddSensor1Parm register_address_sensor1_parm;
+extern RegAddsensorParm register_address_sensor_parm;
+extern RegAddsensorID register_address_sensor_ID;
+extern RegAddsensorParm register_address_sensor_parm;
 
 /******  EEPROM定义区  对应《智能路由器AP端EEPROM规划文档 v1.0.1》 *******/
 

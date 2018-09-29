@@ -55,7 +55,10 @@ extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 
 /* USER CODE BEGIN Private defines */
-
+typedef struct{
+	uint32_t gap_time;
+	uint8_t  window_length;
+}tim_data_update_time_settings;
 /* USER CODE END Private defines */
 
 extern void _Error_Handler(char *, int);

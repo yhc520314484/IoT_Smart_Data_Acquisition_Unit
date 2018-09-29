@@ -10,6 +10,12 @@
   */
 uint8_t unique_ID_STM32L4[12]; 
 
+/**
+  * @brief  传感器参数存储寄存器动态分配内存地址相关指针
+  */
+Linked_List *memory_data_sensor_point_start_address;
+	
+	
 ///**
 //  * @brief  内存中预置的通信密钥
 //  */
@@ -244,6 +250,12 @@ uint8_t error_code_handle(uint8_t error_code){
 			printf(" Error Code: %d \r\n GPIO DIP Switch Sen Mod Read init fail\r\n", ERROR_CODE_GPIO_DIP_Switch_Sen_Mod_Read_FAIL);
 			break;
 		
+		
+		//电表相关的GPIO口初始化失败
+		case ERROR_CODE_GPIO_Electric_Meter_Extra_Init_FAIL:
+			printf(" Error Code: %d \r\n GPIO electric meter extra init fail\r\n", ERROR_CODE_GPIO_Electric_Meter_Extra_Init_FAIL);
+			break;
+		
 		//SP3485模块所使用的USART2是初始化失败
 		case ERROR_CODE_Electric_Meter_USART2_Init_FAIL:
 			printf(" Error Code: %d \r\n electric meter USART2 init fail\r\n", ERROR_CODE_Electric_Meter_USART2_Init_FAIL);
@@ -280,6 +292,119 @@ uint8_t error_code_handle(uint8_t error_code){
 			printf(" Error Code: %d \r\n EEPROM 24c256 registration recovry read procedure fail\r\n", ERROR_CODE_EEPROM_24C256_REGISTRATION_RECOVRY_READ_PROCEDURE_FAIL);
 			break;	 
 		
+		//RTC时钟初始化失败
+		case ERROR_CODE_RTC_Init_Set_FAIL:
+			printf(" Error Code: %d \r\n RTC init set fail\r\n", ERROR_CODE_RTC_Init_Set_FAIL);
+			break;
+
+		//间隔时间和窗口时间解析失败
+		case ERROR_CODE_Data_UpdateTime_Settings_Set_FAIL:
+			printf(" Error Code: %d \r\n data updateTime settings set fail\r\n", ERROR_CODE_Data_UpdateTime_Settings_Set_FAIL);
+			break;			
+		
+		
+		
+		
+		
+		//收到的数据包长度小于最小协议包长度
+		case ERROR_CODE_Protocol_Main_Package_Decode_Header_Length_Check_FAIL:
+			printf(" Error Code: %d \r\n protocol main package decode header length check fail\r\n", ERROR_CODE_Protocol_Main_Package_Decode_Header_Length_Check_FAIL);
+			break;	 
+		
+		//收到的数据包的帧头不正确
+		case ERROR_CODE_Protocol_Main_Package_Decode_Header_Top_Check_FAIL:
+			printf(" Error Code: %d \r\n protocol main package decode header top check fail\r\n", ERROR_CODE_Protocol_Main_Package_Decode_Header_Top_Check_FAIL);
+			break;	
+
+		//收到的数据包的版本号不正确
+		case ERROR_CODE_Protocol_Main_Package_Decode_Header_Version_Check_FAIL:
+			printf(" Error Code: %d \r\n protocol main package decode header version check fail\r\n", ERROR_CODE_Protocol_Main_Package_Decode_Header_Version_Check_FAIL);
+			break;	 		
+		
+		//收到的数据包的序号不正确
+		case ERROR_CODE_Protocol_Main_Package_Decode_Header_Serial_ID_Check_FAIL:
+			printf(" Error Code: %d \r\n protocol main package decode header serial ID check fail\r\n", ERROR_CODE_Protocol_Main_Package_Decode_Header_Serial_ID_Check_FAIL);
+			break;
+		
+		//已注册状态下收到的数据包源地址错误
+		case ERROR_CODE_Protocol_Main_Package_Decode_Header_Master_ID_Check_FAIL:
+			printf(" Error Code: %d \r\n protocol main package decode header master ID check fail\r\n", ERROR_CODE_Protocol_Main_Package_Decode_Header_Master_ID_Check_FAIL);
+			break;
+		
+		//已注册状态下收到的数据包目的地址错误	
+		case ERROR_CODE_Protocol_Main_Package_Decode_Header_Slave_ID_Check_FAIL:
+			printf(" Error Code: %d \r\n protocol main package decode header slave ID check fail\r\n", ERROR_CODE_Protocol_Main_Package_Decode_Header_Slave_ID_Check_FAIL);
+			break;
+		
+		//路由器注册响应解码失败	
+		case ERROR_CODE_Protocol_Device_Registere_Responce_Part_Decode_FAIL:
+			printf(" Error Code: %d \r\n protocol device registere responce part decode fail\r\n", ERROR_CODE_Protocol_Device_Registere_Responce_Part_Decode_FAIL);
+			break;
+		
+		//路由器传感器参数确认/返回失败	
+		case ERROR_CODE_Protocol_Sensor_Parameter_Responce_Part_Decode_FAIL:
+			printf(" Error Code: %d \r\n protocol sensor parameter responce part decode fail\r\n", ERROR_CODE_Protocol_Sensor_Parameter_Responce_Part_Decode_FAIL);
+			break;
+		
+		//路由器时间同步确认失败
+		case ERROR_CODE_Protocol_Time_Sync_Responce_Part_Decode_FAIL:
+			printf(" Error Code: %d \r\n protocol time sync responce part decode fail\r\n", ERROR_CODE_Protocol_Time_Sync_Responce_Part_Decode_FAIL);
+			break;
+		
+		//路由器数据上传确认失败
+		case ERROR_CODE_Protocol_Data_Entity_Ack_Decode_FAIL:
+			printf(" Error Code: %d \r\n protocol data entity ack decode fail\r\n", ERROR_CODE_Protocol_Data_Entity_Ack_Decode_FAIL);
+			break;
+
+		//路由器告警信息确认失败
+		case ERROR_CODE_Protocol_System_Warning_Ack_Part_Decode_FAIL:
+			printf(" Error Code: %d \r\n protocol system warning ack decode fail\r\n", ERROR_CODE_Protocol_System_Warning_Ack_Part_Decode_FAIL);
+			break;
+		
+		//路由器周期更改请求失败
+		case ERROR_CODE_Protocol_Period_Change_Request_Part_Decode_FAIL:
+			printf(" Error Code: %d \r\n protocol period change request part decode fail\r\n", ERROR_CODE_Protocol_Period_Change_Request_Part_Decode_FAIL);
+			break;
+		
+		//路由器传感器参数变更请求失败
+		case ERROR_CODE_Protocol_Sensor_Parameter_Change_Request_Part_Decode_FAIL:
+			printf(" Error Code: %d \r\n protocol sensor parameter change request part decode fail\r\n", ERROR_CODE_Protocol_Sensor_Parameter_Change_Request_Part_Decode_FAIL);
+			break;
+		
+		//路由器更新通信密钥请求失败
+		case ERROR_CODE_Protocol_Communication_Key_Update_Request_Part_Decode_FAIL:
+			printf(" Error Code: %d \r\n protocol communication key update request part decode fail\r\n", ERROR_CODE_Protocol_Communication_Key_Update_Request_Part_Decode_FAIL);
+			break;
+	
+		//路由器退网换区命令失败
+		case ERROR_CODE_Protocol_Network_Switching_Request_Part_Decode_FAIL:
+			printf(" Error Code: %d \r\n protocol network switching request part decode fail\r\n", ERROR_CODE_Protocol_Network_Switching_Request_Part_Decode_FAIL);
+			break;
+
+		//路由器重启命令失败
+		case ERROR_CODE_Protocol_Reboot_Request_Part_Decode_FAIL:
+			printf(" Error Code: %d \r\n protocol reboot request part decode fail\r\n", ERROR_CODE_Protocol_Reboot_Request_Part_Decode_FAIL);
+			break;
+
+		//路由器获取AP设备状态失败
+		case ERROR_CODE_Protocol_Device_State_Request_Part_Decode_FAIL:
+			printf(" Error Code: %d \r\n protocol device state request part decode fail\r\n", ERROR_CODE_Protocol_Device_State_Request_Part_Decode_FAIL);
+			break;
+		
+	//路由器节能模式更改命令失败
+		case ERROR_CODE_Protocol_Energy_Saving_Mode_Request_Part_Decode_FAIL:
+			printf(" Error Code: %d \r\n protocol energy saving mode request part decode fail\r\n", ERROR_CODE_Protocol_Energy_Saving_Mode_Request_Part_Decode_FAIL);
+			break;
+		
+	//路由器恢复出厂设置命令失败
+		case ERROR_CODE_Protocol_Factory_Setting_Reset_Request_Part_Decode_FAIL:
+			printf(" Error Code: %d \r\n protocol factory setting reset request part decode fail\r\n", ERROR_CODE_Protocol_Factory_Setting_Reset_Request_Part_Decode_FAIL);
+			break;
+		
+
+		
+		
+		
 		
 		
 		
@@ -299,6 +424,11 @@ uint8_t error_code_handle(uint8_t error_code){
 		case ERROR_CODE_UART3_RX_BUFFER_OVERFLOW:
 			printf(" Error Code: %d \r\n Uart3 Receive Buffer OverFlow\r\n", ERROR_CODE_UART3_RX_BUFFER_OVERFLOW);  
 			break;
+		
+		//EEPROM读取传感器相关的寄存器失败
+		case ERROR_CODE_EEPROM_24C256_SENSOR_PARAMETER_READ_FAIL:
+			printf(" Error Code: %d \r\n EEPROM 24c256 sensor parameter read fail\r\n", ERROR_CODE_EEPROM_24C256_SENSOR_PARAMETER_READ_FAIL);  
+			break; 
 		
 		//EEPROM读取字节数据失败
 		case ERROR_CODE_EEPROM_Read_Bytes_FAIL:

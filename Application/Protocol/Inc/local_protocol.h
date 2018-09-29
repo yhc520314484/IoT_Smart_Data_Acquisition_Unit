@@ -2,6 +2,9 @@
 #define __LOCAL_PROTOCOL_H__
 
 #include "main.h"
+#include "stm32l4xx_hal.h"
+#include "malloc.h"
+
 
 /**
   * @brief  本地网络协议数据包头定义  对应《智能路由器本地网络协议手册 v1.0.1》
@@ -59,5 +62,25 @@ typedef enum {
 	PROTOCOL_FACTORY_SETTING_RESET_REQUEST_DOWN           = 0x30,              //路由器恢复出厂设置命令
 	PROTOCOL_FACTORY_SETTING_RESET_RESPONCE_UP            = 0x31,              //AP端恢复出厂设置确认	
 }ProtocolMessageTypeDefinition;			
+
+/**
+  * @brief  本地网络协议数据上传数据部分定义  对应《智能路由器本地网络协议手册 v1.0.1》
+  */
+typedef struct{
+	uint8_t sensor_data_item_type;
+	uint8_t sensor_data_item_length;
+	uint8_t *sensor_data_item_entity;
+}single_sensor_data_entity_detail;
+
+
+typedef struct{
+	uint8_t entity_length;                                                //该传感器数据包总长度
+	uint8_t sensor_type;                                                  //该传感器类型
+	uint8_t data_num;                                                     //该传感器数据项的总个数
+	single_sensor_data_entity_detail * sensor_data_entity_detail_point;   //指向该传感器数据项实体的指针
+}sensor_data_entity_for_update;
+
+
+
 
 #endif

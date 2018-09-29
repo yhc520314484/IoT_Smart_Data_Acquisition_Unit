@@ -71,6 +71,7 @@ uint8_t GPIO_DIP_Switch_Com_Mod_Read(com_mod_phy_connected * physical_connected_
 uint8_t GPIO_LoRa_SX1278_Extra_Init(void);
 uint8_t GPIO_WiFi_ESP8266_Extra_Init(void);
 uint8_t GPIO_DIP_Switch_Sen_Mod_Read(sen_mod_phy_connected * physical_connected_status);
+uint8_t GPIO_Electric_Meter_Extra_Init(void);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

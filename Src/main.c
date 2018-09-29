@@ -68,14 +68,16 @@
 //extern com_mod_phy_connected communication_module_physical_connected;
 //extern sen_mod_phy_connected sensor_module_physical_connected;
 
+SystemStateDefinition system_state_definition;    //系统状态定义
+
 /*****  EEPROM 外部引用  ****/
 extern RegAddBasicSettings register_address_basic_settings;
 extern RegAddTimeSettings register_address_time_settings;
 extern RegAddWarningStore register_address_warning_store;
 extern RegAddCommunicationKey register_address_communication_key;
 extern RegAddWipeKey register_address_wipe_key;
-extern RegAddSensor1Parm register_address_sensor1_parm;
-extern RegAddSensor1ID register_address_sensor1_ID;
+extern RegAddsensorParm register_address_sensor_parm;
+extern RegAddsensorID register_address_sensor_ID;
 /*****  EEPROM 外部引用  ****/
 //extern uint8_t uart1_one_byte_Rx_buffer;			//接收中断缓冲
 //extern uint8_t uart2_one_byte_Rx_buffer;			//接收中断缓冲

@@ -41,7 +41,18 @@
 #include "rtc.h"
 
 /* USER CODE BEGIN 0 */
-
+/**
+  * @brief 系统所用实时时钟定义
+  */
+//rtc_sync_time system_rtc_time = {
+//	.rtc_year = 0x18,
+//	.rtc_month = 0x10,
+//	.rtc_day  =  0x01,
+//	.rtc_hour  = 0x00,
+//	.rtc_minute = 0x00,
+//	.rtc_second = 0x00,
+//	.rtc_week   = 0x00
+//};
 /* USER CODE END 0 */
 
 RTC_HandleTypeDef hrtc;
@@ -138,7 +149,49 @@ void HAL_RTC_MspDeInit(RTC_HandleTypeDef* rtcHandle)
 } 
 
 /* USER CODE BEGIN 1 */
+/**
+  * @name         RTC_CalendarConfig
+  * @brief        解析由路由器发来的时间同步数据包
+  * @param        *hrtc:指向RTC配置结构体的指针
+  * @param        *new_rtc_time: 指向由路由器发来的时间同步数据包结构体的指针
+  * @retval       RTC时间是否同步更新完成  成功则返回0  失败则返回1
+	* @lastModify   2018/9/29  14:49
+	* @author       JackWilliam
+  */
+//TimePackage:  yymmddhhmmssw          年/月/日/时/分/秒/星期     字符串格式的  需要减掉 '0'
+uint8_t RTC_CalendarConfig(RTC_HandleTypeDef *hrtc, reg_data_time_settings *new_rtc_time)
+{
+  RTC_TimeTypeDef sTime;
+  RTC_DateTypeDef DateToUpdate;
+//	SyncTime AdjustTime;                   //串口传入的调整时间
+	
+	uint8_t i;
+	
 
+	
+  /* 配置日期 */
+  /* 设置日期：2015年10月4日 星期日 */
+  DateToUpdate.WeekDay = new_rtc_time->Week;
+  DateToUpdate.Month = new_rtc_time->Month;
+  DateToUpdate.Date = new_rtc_time->Day;
+  DateToUpdate.Year = new_rtc_time->Year;  
+  HAL_RTC_SetDate(hrtc,&DateToUpdate,RTC_FORMAT_BCD);
+  
+  /* 配置时间 */
+  /* 时钟时间：10:15:46 */
+  sTime.Hours = new_rtc_time->Hour;
+  sTime.Minutes = new_rtc_time->Minute;
+  sTime.Seconds = new_rtc_time->Second;
+  HAL_RTC_SetTime(hrtc, &sTime, RTC_FORMAT_BCD);
+
+
+  /* 写入一个数值：0x32F1到RTC备份数据寄存器1 */
+  HAL_RTCEx_BKUPWrite(hrtc, RTC_BKP_DR1, 0x32F1);
+	
+	return 0;
+	
+//	printf("Adjust Success!\r\n");
+}
 /* USER CODE END 1 */
 
 /**

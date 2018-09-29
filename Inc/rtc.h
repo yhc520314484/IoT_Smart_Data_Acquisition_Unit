@@ -46,6 +46,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32l4xx_hal.h"
 #include "main.h"
+#include "EEPROM_24C256.h"
 
 /* USER CODE BEGIN Includes */
 
@@ -62,17 +63,17 @@ extern void _Error_Handler(char *, int);
 void MX_RTC_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-typedef struct{
-	uint8_t rtc_year;
-	uint8_t rtc_month;
-	uint8_t rtc_day;
-	uint8_t rtc_hour;
-	uint8_t rtc_minute;
-	uint8_t rtc_second;
-	uint8_t rtc_week;
-}rtc_sync_time;
+//typedef struct{
+//	uint8_t rtc_year;
+//	uint8_t rtc_month;
+//	uint8_t rtc_day;
+//	uint8_t rtc_hour;
+//	uint8_t rtc_minute;
+//	uint8_t rtc_second;
+//	uint8_t rtc_week;
+//}rtc_sync_time;
 	
-
+uint8_t RTC_CalendarConfig(RTC_HandleTypeDef *hrtc, reg_data_time_settings *new_rtc_time);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus
