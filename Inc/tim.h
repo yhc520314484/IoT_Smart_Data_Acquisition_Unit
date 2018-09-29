@@ -53,6 +53,7 @@
 
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
+extern TIM_HandleTypeDef htim5;
 
 /* USER CODE BEGIN Private defines */
 typedef struct{
@@ -65,8 +66,10 @@ extern void _Error_Handler(char *, int);
 
 void MX_TIM2_Init(void);
 void MX_TIM3_Init(void);
+void MX_TIM5_Init(void);
 
 /* USER CODE BEGIN Prototypes */
+
 uint8_t IWDG_TIM3_Init(void);
 /* USER CODE END Prototypes */
 

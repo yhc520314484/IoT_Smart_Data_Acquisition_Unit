@@ -35,7 +35,7 @@ uint8_t EEPROM_24C256_Init(void);
 uint8_t ee_CheckOk(void);
 uint8_t ee_ReadBytes(uint8_t *_pReadBuf, uint16_t _usAddress, uint16_t _usSize);
 uint8_t ee_WriteBytes(uint8_t *_pWriteBuf, uint16_t _usAddress, uint16_t _usSize);
-uint8_t ee_Erase(uint8_t *_pWriteBuf, uint16_t _usAddress, uint16_t _usSize);
+uint8_t ee_Erase(uint16_t _usAddress, uint16_t _usSize);
 uint8_t ee_Test(void);
 
 /******  EEPROM定义区  对应《智能路由器AP端EEPROM规划文档 v1.0.1》 *******/

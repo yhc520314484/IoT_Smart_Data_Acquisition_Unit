@@ -309,14 +309,13 @@ cmd_fail: /* 命令执行失败后，切记发送停止信号，避免影响I2C总线上其他设备 */
 /**
   * @name         ee_Erase
   * @brief        从24C256 EERPOM指定地址擦除数据
-  * @param        _pWriteBuf : 擦除数据的缓冲区指针
 	* @param        _usAddress : 起始地址
   * @param        _usSize : 数据长度，单位为字节
   * @retval       24C256 EEPROM数据擦除是否成功  成功则返回0  失败则返回1
 	* @lastModify   2018/9/25  11:18
 	* @author       JackWilliam
   */
-uint8_t ee_Erase(uint8_t *_pWriteBuf, uint16_t _usAddress, uint16_t _usSize)
+uint8_t ee_Erase(uint16_t _usAddress, uint16_t _usSize)
 {
 	uint16_t i;
 	uint8_t buf[_usSize];

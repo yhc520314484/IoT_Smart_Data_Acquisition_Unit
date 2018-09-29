@@ -23,6 +23,8 @@
 
 
 uint8_t WiFi_ESP8266_Driver_Init(void);
+uint8_t message_send_to_router_by_wifi_esp8266(uint8_t * message_entity, uint8_t message_entity_length);
+
 
 #endif
 

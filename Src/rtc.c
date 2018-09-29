@@ -164,8 +164,8 @@ uint8_t RTC_CalendarConfig(RTC_HandleTypeDef *hrtc, reg_data_time_settings *new_
   RTC_TimeTypeDef sTime;
   RTC_DateTypeDef DateToUpdate;
 //	SyncTime AdjustTime;                   //串口传入的调整时间
-	
-	uint8_t i;
+//	
+//	uint8_t i;
 	
 
 	

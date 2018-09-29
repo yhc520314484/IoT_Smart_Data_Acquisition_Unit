@@ -4,11 +4,16 @@
 #include "sensor_electric_meter.h"
 #include "rtc.h"
 #include "tim.h"
+#include "encyption_aes.h"
+#include "encyption_util.h"
 
 #define   PROTOCOL_HEADER               0xFF          //协议数据包帧头
 #define   PROTOCOL_VERSION              0x01          //协议数据包版本号
 #define   PROTOCOL_MINIMUM_LENGTH       11            //协议数据包最小长度，即不带数据部分的长度
 #define   SENSOR_ADDRESS_FINDING_TIMES  10            //传感器寻址重复次数
+#define   MAX_ACK_MESSAGE_LEN           255           //发送至路由器端ACK包的最长长度
+
+#define   ENCYPTION_ENABLE               1            //开启消息加密解密
 
 extern SystemStateDefinition system_state_definition; 
 extern reg_data_sensor_parm_and_ID    register_data_sensor_parm_and_ID;
@@ -51,6 +56,14 @@ uint8_t protocol_main_package_encode(uint8_t * msg_serial_ID, uint8_t *srcID, ui
 	uint8_t len;
 	static uint8_t package_sequence_number = 0x00;
 	
+#if ENCYPTION_ENABLE                  //使能了加密算法后的封包过程
+	uint8_t encyption_message_buf[MAX_ACK_MESSAGE_LEN];
+	uint8_t j;
+	AES_KEY aes_key;
+	uint8_t cipher[MAX_ACK_MESSAGE_LEN];
+#endif	
+	
+	
 	//顺序ID
 	package_sequence_number++;
 	if(package_sequence_number == 0xFF) package_sequence_number = 0x00;
@@ -74,6 +87,17 @@ uint8_t protocol_main_package_encode(uint8_t * msg_serial_ID, uint8_t *srcID, ui
 	package_entity[7] = package.frame_header.message_type;
 	package_entity[8] = package.frame_header.date_entity_length;
 	for(i = 0; i < datalen; i++) package_entity[9 + i] = package.date_entity[i];
+	
+#if ENCYPTION_ENABLE
+	if(datalen != 0){
+		for(i = 9, j = 0; i < 9 + datalen; i++, j++)
+			encyption_message_buf[j] = package_entity[i];
+		AES_set_encrypt_key(register_data_communication_key.CommunicationKey, 128, &aes_key);
+		AES_encrypt(encyption_message_buf, cipher, &aes_key);
+		for(i = 9, j = 0; i < 9 + datalen; i++, j++)
+			package_entity[i] = cipher[j];
+	}
+#endif
 	
 
 	package_entity[9 + datalen] = 0x0D;
@@ -277,14 +301,11 @@ uint8_t protocol_device_registere_responce_part_decode(uint8_t *package_entity, 
 	* @lastModify   2018/9/29  15:25
   */
 uint8_t protocol_sensor_parameter_responce_part_decode(uint8_t *package_entity, uint8_t package_len, Linked_List *sensor_parameter_recovery_linked_list_header){
-	uint8_t data_entity_len = package_entity[8];
 //	reg_data_sensor_parm sensor_parm;
 //	reg_data_sensor_ID sensor_ID;
 	uint16_t offset_address = 0;                                      //EEPROM偏移地址 
 	
 	uint8_t sensor_parameter_message_length = 0;       //传感器配置参数总长度
-	uint8_t sensor_ID_length = 0;                      //传感器ID长度
-	uint8_t sensor_ID_num = 0;                         //传感器ID个数
 	uint8_t start_stone = 0;                           //每个数据段起点标记
 	uint8_t i, j;
 
@@ -372,13 +393,20 @@ uint8_t protocol_sensor_parameter_responce_part_decode(uint8_t *package_entity, 
   */
 uint8_t protocol_time_sync_responce_part_decode(uint8_t *package_entity, uint8_t package_len){
 	//时间格式校验	
-	if(package_entity[9] < 0x00 || package_entity[9] > 0x99 || 
+		if(package_entity[9] > 0x99 || 
 		 package_entity[10] < 0x01 || package_entity[10] > 0x12 ||
   	 package_entity[11] < 0x01   || package_entity[11] > 0x31 || 
-		 package_entity[12] < 0x00   || package_entity[12] > 0x24 ||
-		 package_entity[13] < 0x00 || package_entity[13] > 0x60 ||
-		 package_entity[14] < 0x00 || package_entity[14] > 0x60 ||
+		 package_entity[12] > 0x24 ||
+		 package_entity[13] > 0x60 ||
+		 package_entity[14] > 0x60 ||
 		 package_entity[15] < 0x01   || package_entity[15] > 0x07) return 1;  
+//	if(package_entity[9] < 0x00 || package_entity[9] > 0x99 || 
+//		 package_entity[10] < 0x01 || package_entity[10] > 0x12 ||
+//  	 package_entity[11] < 0x01   || package_entity[11] > 0x31 || 
+//		 package_entity[12] < 0x00   || package_entity[12] > 0x24 ||
+//		 package_entity[13] < 0x00 || package_entity[13] > 0x60 ||
+//		 package_entity[14] < 0x00 || package_entity[14] > 0x60 ||
+//		 package_entity[15] < 0x01   || package_entity[15] > 0x07) return 1;  
 	
 	register_data_time_settings.Year = package_entity[9];
 	register_data_time_settings.Month = package_entity[10];
@@ -428,6 +456,7 @@ uint8_t protocol_time_sync_responce_part_decode(uint8_t *package_entity, uint8_t
 	if(ee_WriteBytes(&register_data_time_settings.WindowLength, register_address_time_settings.WindowLength, 1))
 		error_code_handle(ERROR_CODE_EEPROM_Write_Bytes_FAIL);
 
+	system_state_definition = SYSTEM_STATE_TIME_SYNC_ACK_GET_DOWN;
 	
 	return 0;
 }
@@ -442,7 +471,8 @@ uint8_t protocol_time_sync_responce_part_decode(uint8_t *package_entity, uint8_t
 	* @lastModify   2018/9/26  17:20
   */
 uint8_t protocol_data_entity_ack_part_decode(uint8_t *package_entity, uint8_t package_len){
-	
+	//暂无需任何解码操作
+	system_state_definition = SYSTEM_STATE_DATA_ENTITY_ACK_GET_DOWN;
 	
 	return 0;
 }
@@ -457,10 +487,14 @@ uint8_t protocol_data_entity_ack_part_decode(uint8_t *package_entity, uint8_t pa
 	* @lastModify   2018/9/26  17:20
   */
 uint8_t protocol_system_warning_ack_part_decode(uint8_t *package_entity, uint8_t package_len){
-	
+	//暂无需任何解码操作
 	
 	return 0;
 }
+
+
+
+/*******************************服务器发起的数据包对***********************************/
 
 
 /**
@@ -472,8 +506,16 @@ uint8_t protocol_system_warning_ack_part_decode(uint8_t *package_entity, uint8_t
 	* @author       JackWilliam
 	* @lastModify   2018/9/26  17:20
   */
-uint8_t protocol_period_change_request_decode(uint8_t *package_entity, uint8_t package_len){
+uint8_t protocol_period_change_request_decode(uint8_t package_serial_ID, uint8_t *package_entity, uint8_t package_len){
+	uint8_t ack_message_entity[MAX_ACK_MESSAGE_LEN];
+	uint8_t ack_message_length;
 	
+	if(protocol_time_sync_responce_part_decode(package_entity, package_len))
+			error_code_handle(ERROR_CODE_Period_Change_FAIL);
+	
+	protocol_main_package_encode(&package_serial_ID, register_data_basic_settings.SlaveID, register_data_basic_settings.MasterID,
+			PROTOCOL_PERIOD_CHANGE_RESPONCE_UP, 0, NULL, ack_message_entity, &ack_message_length);
+	message_send_to_router(ack_message_entity, ack_message_length);
 	
 	return 0;
 }
@@ -488,8 +530,16 @@ uint8_t protocol_period_change_request_decode(uint8_t *package_entity, uint8_t p
 	* @author       JackWilliam
 	* @lastModify   2018/9/26  17:20
   */
-uint8_t protocol_sensor_parameter_change_request_part_decode(uint8_t *package_entity, uint8_t package_len){
+uint8_t protocol_sensor_parameter_change_request_part_decode(uint8_t package_serial_ID, uint8_t *package_entity, uint8_t package_len, Linked_List *sensor_parameter_recovery_linked_list_header){
+	uint8_t ack_message_entity[MAX_ACK_MESSAGE_LEN];
+	uint8_t ack_message_length;
 	
+	if(protocol_sensor_parameter_responce_part_decode(package_entity, package_len, sensor_parameter_recovery_linked_list_header))
+		error_code_handle(ERROR_CODE_Sensor_Parameter_Change_FAIL);
+	
+	protocol_main_package_encode(&package_serial_ID, register_data_basic_settings.SlaveID, register_data_basic_settings.MasterID,
+			PROTOCOL_SENSOR_PARAMETER_CHANGE_RESPONCE_UP, 0, NULL, ack_message_entity, &ack_message_length);
+	message_send_to_router(ack_message_entity, ack_message_length);
 	
 	return 0;
 }
@@ -503,23 +553,34 @@ uint8_t protocol_sensor_parameter_change_request_part_decode(uint8_t *package_en
 	* @author       JackWilliam
 	* @lastModify   2018/9/26  17:20
   */
-uint8_t protocol_communication_key_update_request_part_decode(uint8_t *package_entity, uint8_t package_len){
+uint8_t protocol_communication_key_update_request_part_decode(uint8_t package_serial_ID, uint8_t *package_entity, uint8_t package_len){
+	uint8_t i;
+	uint8_t ack_message_entity[MAX_ACK_MESSAGE_LEN];
+	uint8_t ack_message_length;
 	
+	for(i = 0; i < 16; i++) register_data_communication_key.CommunicationKey[i] = package_entity[9 + i];
+	
+	if(ee_WriteBytes(register_data_communication_key.CommunicationKey, register_address_communication_key.CommunicationKey, 16))
+		error_code_handle(ERROR_CODE_EEPROM_Write_Bytes_FAIL);
+	
+	protocol_main_package_encode(&package_serial_ID, register_data_basic_settings.SlaveID, register_data_basic_settings.MasterID,
+			PROTOCOL_COMMUNICATION_KEY_UPDATE_RESPONCE_UP, 0, NULL, ack_message_entity, &ack_message_length);
+	message_send_to_router(ack_message_entity, ack_message_length);
 	
 	return 0;
 }
 
 /**
-  * @name         protocol_network_switching_request_part_decode
-  * @brief        路由器发来的主协议数据包中退网换区命令解析
+  * @name         protocol_network_switching_request_part_decode(尚未开发！！！)
+  * @brief        路由器发来的主协议数据包中退网换区命令解析(尚未开发！！！)
   * @param        *package_entity: 指向接收到的数据包数据实体部分的指针
   * @param        package_len: 接收到的数据包实体部分的长度
   * @retval       协议数据包实体部分是否成功解析  成功则返回0  失败则返回1
 	* @author       JackWilliam
 	* @lastModify   2018/9/26  17:20
   */
-uint8_t protocol_network_switching_request_part_decode(uint8_t *package_entity, uint8_t package_len){
-	
+uint8_t protocol_network_switching_request_part_decode(uint8_t package_serial_ID, uint8_t *package_entity, uint8_t package_len){
+	//该功能尚未开发！！！
 	
 	return 0;
 }
@@ -533,8 +594,15 @@ uint8_t protocol_network_switching_request_part_decode(uint8_t *package_entity, 
 	* @author       JackWilliam
 	* @lastModify   2018/9/26  17:20
   */
-uint8_t protocol_reboot_request_part_decode(uint8_t *package_entity, uint8_t package_len){
+uint8_t protocol_reboot_request_part_decode(uint8_t package_serial_ID, uint8_t *package_entity, uint8_t package_len){
+	uint8_t ack_message_entity[MAX_ACK_MESSAGE_LEN];
+	uint8_t ack_message_length;
 	
+	protocol_main_package_encode(&package_serial_ID, register_data_basic_settings.SlaveID, register_data_basic_settings.MasterID,
+			PROTOCOL_REBOOT_RESPONCE_UP, 0, NULL, ack_message_entity, &ack_message_length);
+	message_send_to_router(ack_message_entity, ack_message_length);
+	
+	NVIC_SystemReset();
 	
 	return 0;
 }
@@ -548,8 +616,8 @@ uint8_t protocol_reboot_request_part_decode(uint8_t *package_entity, uint8_t pac
 	* @author       JackWilliam
 	* @lastModify   2018/9/26  17:20
   */
-uint8_t protocol_device_state_request_part_decode(uint8_t *package_entity, uint8_t package_len){
-	
+uint8_t protocol_device_state_request_part_decode(uint8_t package_serial_ID, uint8_t *package_entity, uint8_t package_len){
+		//该功能尚未开发！！！
 	
 	return 0;
 }
@@ -563,8 +631,18 @@ uint8_t protocol_device_state_request_part_decode(uint8_t *package_entity, uint8
 	* @author       JackWilliam
 	* @lastModify   2018/9/26  17:20
   */
-uint8_t protocol_energy_saving_mode_request_part_decode(uint8_t *package_entity, uint8_t package_len){
+uint8_t protocol_energy_saving_mode_request_part_decode(uint8_t package_serial_ID, uint8_t *package_entity, uint8_t package_len){
+	uint8_t ack_message_entity[MAX_ACK_MESSAGE_LEN];
+	uint8_t ack_message_length;
 	
+	register_data_basic_settings.SavePower = package_entity[9];
+	
+	if(ee_WriteBytes(&register_data_basic_settings.SavePower, register_address_basic_settings.SavePower, 1))
+		error_code_handle(ERROR_CODE_EEPROM_Write_Bytes_FAIL);
+	
+	protocol_main_package_encode(&package_serial_ID, register_data_basic_settings.SlaveID, register_data_basic_settings.MasterID,
+		PROTOCOL_ENERGY_SAVING_MODE_RESPONCE_UP, 0, NULL, ack_message_entity, &ack_message_length);
+	message_send_to_router(ack_message_entity, ack_message_length);
 	
 	return 0;
 }
@@ -578,8 +656,28 @@ uint8_t protocol_energy_saving_mode_request_part_decode(uint8_t *package_entity,
 	* @author       JackWilliam
 	* @lastModify   2018/9/26  17:20
   */
-uint8_t protocol_factory_setting_reset_request_part_decode(uint8_t *package_entity, uint8_t package_len){
+uint8_t protocol_factory_setting_reset_request_part_decode(uint8_t package_serial_ID, uint8_t *package_entity, uint8_t package_len, Linked_List *sensor_parameter_recovery_linked_list_header){
+	uint8_t i;
+	uint8_t sensor_node_num = 0;
+	uint8_t ack_message_entity[MAX_ACK_MESSAGE_LEN];
+	uint8_t ack_message_length;
 	
+	ee_ReadBytes(register_data_wipe_key.WipeKey, register_address_wipe_key.WipeKey, 16);
+	for(i = 0; i < 16; i++){
+		if(register_data_wipe_key.WipeKey[i] != package_entity[9 + i]){
+			error_code_handle(ERROR_CODE_Wipe_Key_Check_FAIL);
+			return 1;
+		}
+	}
+	
+	protocol_main_package_encode(&package_serial_ID, register_data_basic_settings.SlaveID, register_data_basic_settings.MasterID,
+		PROTOCOL_FACTORY_SETTING_RESET_RESPONCE_UP, 0, NULL, ack_message_entity, &ack_message_length);
+	message_send_to_router(ack_message_entity, ack_message_length);
+	
+	sensor_node_num = GetNodeNum(sensor_parameter_recovery_linked_list_header);
+	
+	ee_Erase(AP_REG_BASIC_SETTINGS, (5 * 16 + 2 * 16 * sensor_node_num));
+	NVIC_SystemReset();
 	
 	return 0;
 }
@@ -598,6 +696,13 @@ uint8_t protocol_factory_setting_reset_request_part_decode(uint8_t *package_enti
   */
 uint8_t protocol_main_package_decode(uint8_t package_serial_ID, uint8_t *package_entity, uint8_t package_len)
 {
+#if ENCYPTION_ENABLE                  //使能了加密算法后的解包过程
+	uint8_t decyption_message_buf[MAX_ACK_MESSAGE_LEN];
+	uint8_t i, j;
+	AES_KEY aes_key;
+	uint8_t datelen = 0;
+	uint8_t cipher[MAX_ACK_MESSAGE_LEN];
+#endif	
 	
 	/***************数据包校验********************/
 	//收到的数据包长度小于最小协议包长度
@@ -639,7 +744,21 @@ uint8_t protocol_main_package_decode(uint8_t package_serial_ID, uint8_t *package
 					error_code_handle(ERROR_CODE_Protocol_Main_Package_Decode_Header_Slave_ID_Check_FAIL);   
 					return 1;
 		}  
-	}		
+	}	
+	
+	
+#if ENCYPTION_ENABLE                  //使能了加密算法后的解包过程
+	datelen = package_entity[8];
+	if(datelen != 0){
+		for(i = 9, j = 0; i < 9 + datelen; i++, j++)
+			cipher[j] = package_entity[i];
+		AES_set_decrypt_key(register_data_communication_key.CommunicationKey, 128, &aes_key);
+		AES_decrypt(cipher, decyption_message_buf, &aes_key);
+		for(i = 9, j = 0; i < 9 + datelen; i++, j++)
+			package_entity[i] = decyption_message_buf[j];
+	}
+#endif
+	
 	/***************数据包校验********************/
 
 		
@@ -670,45 +789,45 @@ uint8_t protocol_main_package_decode(uint8_t package_serial_ID, uint8_t *package
 			if(protocol_system_warning_ack_part_decode(package_entity, package_len))
 				error_code_handle(ERROR_CODE_Protocol_System_Warning_Ack_Part_Decode_FAIL);   //路由器告警信息确认失败			
 			break;	
-
+			
 		//路由器主动发起
 		case PROTOCOL_PERIOD_CHANGE_REQUEST_DOWN:
-			if(protocol_period_change_request_decode(package_entity, package_len))
+			if(protocol_period_change_request_decode(package_serial_ID, package_entity, package_len))
 				error_code_handle(ERROR_CODE_Protocol_Period_Change_Request_Part_Decode_FAIL);    //路由器周期更改请求失败			
 			break;
 
 		case PROTOCOL_SENSOR_PARAMETER_CHANGE_REQUEST_DOWN:
-			if(protocol_sensor_parameter_change_request_part_decode(package_entity, package_len))
+			if(protocol_sensor_parameter_change_request_part_decode(package_serial_ID, package_entity, package_len, memory_data_sensor_point_start_address))
 				error_code_handle(ERROR_CODE_Protocol_Sensor_Parameter_Change_Request_Part_Decode_FAIL);   //路由器传感器参数变更请求失败			
 			break;	
 
 		case PROTOCOL_COMMUNICATION_KEY_UPDATE_REQUEST_DOWN:
-			if(protocol_communication_key_update_request_part_decode(package_entity, package_len))
+			if(protocol_communication_key_update_request_part_decode(package_serial_ID, package_entity, package_len))
 				error_code_handle(ERROR_CODE_Protocol_Communication_Key_Update_Request_Part_Decode_FAIL);   //路由器更新通信密钥请求失败			
 			break;	
 
 		case PROTOCOL_NETWORK_SWITCHING_REQUEST_DOWN:
-			if(protocol_network_switching_request_part_decode(package_entity, package_len))
+			if(protocol_network_switching_request_part_decode(package_serial_ID, package_entity, package_len))
 				error_code_handle(ERROR_CODE_Protocol_Network_Switching_Request_Part_Decode_FAIL);   //路由器退网换区命令失败			
 			break;		
 		
 		case PROTOCOL_REBOOT_REQUEST_DOWN:
-			if(protocol_reboot_request_part_decode(package_entity, package_len))
+			if(protocol_reboot_request_part_decode(package_serial_ID, package_entity, package_len))
 				error_code_handle(ERROR_CODE_Protocol_Reboot_Request_Part_Decode_FAIL);   //路由器重启命令失败			
 			break;
 
 		case PROTOCOL_DEVICE_STATE_REQUEST_DOWN:
-			if(protocol_device_state_request_part_decode(package_entity, package_len))
+			if(protocol_device_state_request_part_decode(package_serial_ID, package_entity, package_len))
 				error_code_handle(ERROR_CODE_Protocol_Device_State_Request_Part_Decode_FAIL);   //路由器获取AP设备状态失败			
 			break;
 
 		case PROTOCOL_ENERGY_SAVING_MODE_REQUEST_DOWN:
-			if(protocol_energy_saving_mode_request_part_decode(package_entity, package_len))
+			if(protocol_energy_saving_mode_request_part_decode(package_serial_ID, package_entity, package_len))
 				error_code_handle(ERROR_CODE_Protocol_Energy_Saving_Mode_Request_Part_Decode_FAIL);    //路由器节能模式更改命令失败			
 			break;		
 		
 		case PROTOCOL_FACTORY_SETTING_RESET_REQUEST_DOWN:
-			if(protocol_factory_setting_reset_request_part_decode(package_entity, package_len))
+			if(protocol_factory_setting_reset_request_part_decode(package_serial_ID, package_entity, package_len, memory_data_sensor_point_start_address))
 				error_code_handle(ERROR_CODE_Protocol_Factory_Setting_Reset_Request_Part_Decode_FAIL);    //路由器恢复出厂设置命令失败			
 			break;	
 		

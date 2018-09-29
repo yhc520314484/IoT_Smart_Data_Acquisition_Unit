@@ -362,3 +362,23 @@ void AES_decrypt(const uint8_t *cipher, uint8_t *text, const AES_KEY *key)
     *(uint32_t *)(text +  8) = SWAP(v13);
     *(uint32_t *)(text + 12) = SWAP(v14);
 }
+
+unsigned _rotl (unsigned val,int shift)
+{
+        register unsigned hibit;        /* non-zero means hi bit set */
+        register unsigned num = val;    /* number to rotate */
+        shift &= 0x1f;                  /* modulo 32 -- this will also make
+                                           negative shifts work */
+        while (shift--) {
+                hibit = num & 0x80000000;  /* get high bit */
+                num <<= 1;              /* shift left one bit */
+                if (hibit)
+                        num |= 1;       /* set lo bit if hi bit was set */
+        }
+        return num;
+} 
+
+unsigned long ROTATE (unsigned long val,int shift)
+{
+        return( (unsigned long) _rotl((unsigned) val, shift) );
+}

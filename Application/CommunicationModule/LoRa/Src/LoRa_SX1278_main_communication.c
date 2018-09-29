@@ -18,3 +18,16 @@ uint8_t LoRa_SX1278_Radio_Driver_Init(void){
 	
 	return 0;
 }
+
+/**
+  * @name         message_send_to_router_by_lora_sx1278
+  * @brief        通过LoRa SX1278 发送协议数据消息至路由器
+  * @param        void
+  * @retval       通过LoRa SX1278 协议数据消息是否发送成功，成功则返回0，失败则返回1
+	* @lastModify   2018/9/29  19:14
+	* @author       JackWilliam
+  */
+uint8_t message_send_to_router_by_lora_sx1278(uint8_t * message_entity, uint8_t message_entity_length){
+
+	return 0;
+}

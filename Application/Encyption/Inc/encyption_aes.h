@@ -22,26 +22,8 @@
 
 #define AES_MAXNR        10
 #define ROTL8(x,shift) ((uint8_t) ((x) << (shift)) | ((x) >> (8 - (shift))))
+unsigned long ROTATE (unsigned long val,int shift);
 
-unsigned _rotl (unsigned val,int shift)
-{
-        register unsigned hibit;        /* non-zero means hi bit set */
-        register unsigned num = val;    /* number to rotate */
-        shift &= 0x1f;                  /* modulo 32 -- this will also make
-                                           negative shifts work */
-        while (shift--) {
-                hibit = num & 0x80000000;  /* get high bit */
-                num <<= 1;              /* shift left one bit */
-                if (hibit)
-                        num |= 1;       /* set lo bit if hi bit was set */
-        }
-        return num;
-} 
-
-unsigned long ROTATE (unsigned long val,int shift)
-{
-        return( (unsigned long) _rotl((unsigned) val, shift) );
-}
 
 //#undef ROTATE
 //#if defined(_MSC_VER) || defined(__ICC)

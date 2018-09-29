@@ -42,3 +42,17 @@ uint8_t WiFi_ESP8266_Driver_Init(void){
 
 	return 0;
 }
+
+
+/**
+  * @name         message_send_to_router_by_wifi_esp8266
+  * @brief        通过wifi_esp8266 发送协议数据消息至路由器
+  * @param        void
+  * @retval       通过wifi_esp8266 协议数据消息是否发送成功，成功则返回0，失败则返回1
+	* @lastModify   2018/9/29  19:14
+	* @author       JackWilliam
+  */
+uint8_t message_send_to_router_by_wifi_esp8266(uint8_t * message_entity, uint8_t message_entity_length){
+
+	return 0;
+}

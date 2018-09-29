@@ -172,8 +172,8 @@ bool ESP8266_Cmd ( char * cmd, char * reply1, char * reply2, uint32_t waittime )
 {    
 	strEsp8266_Fram_Record .InfBit .FramLength = 0;               //从新开始接收新的数据包
 	int len = 0;
-	sprintf(send_buf, "%s\r\n", cmd);
-	len = strlen(send_buf);
+	sprintf((char *)send_buf, "%s\r\n", cmd);
+	len = strlen((char *)send_buf);
 //	printf("LLL: %d\r\n",len);
 	HAL_UART_Transmit(&huart3,send_buf,len, 0xFFFF);
 	
@@ -612,14 +612,14 @@ bool ESP8266_SendString ( FunctionalState enumEnUnvarnishTx, char * pStr, uint32
 {
 	char cStr [256];
 	bool bRet = false;
-	uint16_t msgLen = 0;
+//	uint16_t msgLen = 0;
 	
 		
 	if ( enumEnUnvarnishTx )
 	{
 //		msgLen = strlen(pStr);
 //		printf("ESPSEND: %s, Len: %d", pStr, msgLen);
-			HAL_UART_Transmit(&huart3,pStr,ulStrLength, 0xFFFF);
+			HAL_UART_Transmit(&huart3,(uint8_t *)pStr,ulStrLength, 0xFFFF);
 		
 //		HAL_UART_Transmit(&huart3,pStr,msgLen, 0xFFFF);
 		

@@ -46,8 +46,11 @@ typedef enum {
 	
 	ERROR_CODE_RTC_Init_Set_FAIL,                              //RTC时钟初始化失败
 	ERROR_CODE_Data_UpdateTime_Settings_Set_FAIL,              //间隔时间和窗口时间解析失败
-
-
+	ERROR_CODE_Period_Change_FAIL,                             //系统时间周期更改失败
+	ERROR_CODE_Sensor_Parameter_Change_FAIL,                   //传感器参数变更请求解析失败
+	ERROR_CODE_Wipe_Key_Check_FAIL,                            //恢复初始化设置的密钥校验失败
+	
+	
 	
 	ERROR_CODE_Protocol_Main_Package_Decode_Header_Length_Check_FAIL,           //收到的数据包长度小于最小协议包长度
 	ERROR_CODE_Protocol_Main_Package_Decode_Header_Top_Check_FAIL,              //收到的数据包的帧头不正确
@@ -87,5 +90,6 @@ void init_instruction_resend_procedure(uint8_t resend_count);   //初始化指令重发
 uint8_t clear_alarm_and_count(uint8_t count_reg_exist, 
 	  uint8_t * alarm_flag, uint8_t alarm_flag_addr, uint8_t alarm_flag_size, 
 		uint8_t *  alarm_count, uint8_t alarm_count_addr, uint8_t alarm_count_size);    //清空告警寄存器中的告警位及其相关的计数器
+uint8_t message_send_to_router(uint8_t * message_entity, uint8_t message_entity_length);
 
 #endif

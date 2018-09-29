@@ -140,6 +140,7 @@ int main(void)
   MX_USART3_UART_Init();
   MX_SPI2_Init();
   MX_TIM3_Init();
+  MX_TIM5_Init();
   /* USER CODE BEGIN 2 */
 
 UserInit:
@@ -254,17 +255,6 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 
-
-
-
-
-//uint8_t peripheral_IT_init(void){
-//	HAL_UART_Receive_IT(&huart1, (uint8_t *)&uart1_one_byte_Rx_buffer, 1);
-//	HAL_UART_Receive_IT(&huart2, (uint8_t *)&uart2_one_byte_Rx_buffer, 1);
-//	HAL_UART_Receive_IT(&huart3, (uint8_t *)&uart3_one_byte_Rx_buffer, 1);
-//	
-//	return 0;
-//} 
 /* USER CODE END 4 */
 
 /**

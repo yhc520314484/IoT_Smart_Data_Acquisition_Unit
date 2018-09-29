@@ -33,11 +33,11 @@ sen_electric_meter_gen_para sensor_electric_meter_general_parameters = {
   */
 uint8_t RS485_Send_Data(uint8_t *buf,uint8_t len){
 	uint8_t t;
-	uint8_t RS485_RX_CNT = 0;
+//	uint8_t RS485_RX_CNT = 0;
 	
 	electric_meter_rs485_TX_EN;			//设置为发送模式
 	memset(electric_meter_rs485_bus_read_buffer,0,MAX_RS485_BUFFER_LEN);//清空接收区
-	RS485_RX_CNT=0;		//清零
+//	RS485_RX_CNT=0;		//清零
   for(t=0;t<len;t++)		//循环发送数据
 	{
 		HAL_UART_Transmit_IT(&huart2, (uint8_t *)&buf[t], 1); //将收到的信息发送出去		
@@ -46,7 +46,7 @@ uint8_t RS485_Send_Data(uint8_t *buf,uint8_t len){
 		HAL_Delay(5);
 	}	 	
 //	HAL_UART_Transmit(&huart3, (uint8_t *)&buf, len,0xFFFF);
-	RS485_RX_CNT=0;	  
+//	RS485_RX_CNT=0;	  
 	electric_meter_rs485_RX_EN;				//设置为接收模式	
 	
 	return 0;

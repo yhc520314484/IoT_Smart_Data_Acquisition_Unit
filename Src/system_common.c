@@ -1,6 +1,10 @@
 #include "system_common.h"
 #include "EEPROM_24C256.h"
 #include "gpio.h"
+#include "LoRa_SX1278_main_communication.h"
+#include "WiFi_ESP8266_main_communication.h"
+#include "BlueTooth_nRF52832_main_communication.h"
+#include "NB_IoT_BC26_main_communication.h"
 
 #define RESEND_COUNT_LIMITS    10
 #define RESET_COUNT_LIMITS     10
@@ -125,6 +129,29 @@ uint8_t clear_alarm_and_count(uint8_t count_reg_exist,
 					error_code_handle(ERROR_CODE_EEPROM_Write_Bytes_FAIL);
 		}
 	}
+	return 0;
+}
+
+/**
+  * @name         message_send_to_router(暂未编写！)
+	* @brief        发送协议数据消息至路由器(暂未编写！)
+	* @param        *message_entity:指向欲发送到路由器消息实体的指针
+	* @param        message_entity_length:欲发送到路由器消息实体的长度
+	* @retval       协议数据消息是否发送成功，成功则返回0，失败则返回1
+	* @lastModify   2018/9/29  16:29
+	* @author       JackWilliam
+  */
+uint8_t message_send_to_router(uint8_t * message_entity, uint8_t message_entity_length){
+	//(暂未编写！)
+	if(communication_module_physical_connected.lora_sx1278_connected == 1)
+			message_send_to_router_by_lora_sx1278(message_entity, message_entity_length);
+	if(communication_module_physical_connected.bluetooth_nrf52832_connected == 1)
+			message_send_to_router_by_bluetooth_nrf52832(message_entity, message_entity_length);
+	if(communication_module_physical_connected.wifi_esp8266_connected == 1)
+			message_send_to_router_by_wifi_esp8266(message_entity, message_entity_length);
+	if(communication_module_physical_connected.nb_iot_bc26_connected == 1)
+			message_send_to_router_by_nb_iot_bc26(message_entity, message_entity_length);
+		
 	return 0;
 }
 
@@ -302,7 +329,21 @@ uint8_t error_code_handle(uint8_t error_code){
 			printf(" Error Code: %d \r\n data updateTime settings set fail\r\n", ERROR_CODE_Data_UpdateTime_Settings_Set_FAIL);
 			break;			
 		
+		//间隔时间和窗口时间解析失败
+		case ERROR_CODE_Period_Change_FAIL:
+			printf(" Error Code: %d \r\n data period change set fail\r\n", ERROR_CODE_Period_Change_FAIL);
+			break;		
 		
+		
+		//传感器参数变更请求解析失败
+		case ERROR_CODE_Sensor_Parameter_Change_FAIL:
+			printf(" Error Code: %d \r\n sensor parameter change fail\r\n", ERROR_CODE_Sensor_Parameter_Change_FAIL);
+			break;	
+		
+		//恢复初始化设置的密钥校验失败		
+		case ERROR_CODE_Wipe_Key_Check_FAIL:
+			printf(" Error Code: %d \r\n wipe key check fail\r\n", ERROR_CODE_Wipe_Key_Check_FAIL);
+			break;	
 		
 		
 		
